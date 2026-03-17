@@ -1,21 +1,10 @@
 <?php
 
-// TEMPORAL - borrar después
-var_dump([
-    'host' => getenv('DB_HOST'),
-    'port' => getenv('DB_PORT'),
-    'name' => getenv('DB_NAME'),
-    'user' => getenv('DB_USER'),
-    'pass' => getenv('DB_PASSWORD') ? 'OK' : 'VACIO',
-]);
-exit();
-
-define('DB_HOST',     'db.ooxfyrlyjcjdqdmunktb.supabase.co');
-define('DB_PORT',     '5432');
-define('DB_NAME',     'postgres');
-define('DB_USER',     'postgres');
-define('DB_PASSWORD', 'agenda2026_sinche');
-
+define('DB_HOST',     getenv('DB_HOST') ?: 'db.ooxfyrlyjcjdqdmunktb.supabase.co');
+define('DB_PORT',     getenv('DB_PORT') ?: '5432');
+define('DB_NAME',     getenv('DB_NAME') ?: 'postgres');
+define('DB_USER',     getenv('DB_USER') ?: 'postgres');
+define('DB_PASSWORD', getenv('DB_PASSWORD') ?: 'agenda2026_sinche');
 
 function getDB() {
     $dsn = "pgsql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME;
