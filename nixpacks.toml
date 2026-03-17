@@ -1,8 +1,0 @@
-[phases.setup]
-nixPkgs = ["php82", "php82Extensions.pdo", "php82Extensions.pdo_pgsql", "php82Extensions.pgsql"]
-
-[phases.build]
-cmds = ["php -m | grep pgsql"]
-
-[start]
-cmd = "php -S 0.0.0.0:$PORT -t ."
