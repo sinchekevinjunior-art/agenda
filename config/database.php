@@ -1,5 +1,4 @@
 <?php
-<?php
 
 // TEMPORAL - borrar después
 var_dump([
