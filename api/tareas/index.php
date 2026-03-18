@@ -36,15 +36,17 @@ switch ($method) {
             $prioridad = 'media';
 
         $stmt = $db->prepare(
-            "INSERT INTO tarea (usuario_id, titulo, descripcion, fecha_vencimiento, prioridad, estado)
-             VALUES (1, :titulo, :descripcion, :fecha_vencimiento, :prioridad, 'pendiente')
+            "INSERT INTO tarea (usuario_id, categoria_id, titulo, descripcion, fecha_vencimiento, prioridad, estado)
+             VALUES (1, :categoria_id, :titulo, :descripcion, :fecha_vencimiento, :prioridad, :estado)
              RETURNING *"
         );
         $stmt->execute([
-            ':titulo'            => $body['titulo'],
-            ':descripcion'       => $body['descripcion']       ?? null,
-            ':fecha_vencimiento' => $body['fecha_vencimiento'] ?? null,
-            ':prioridad'         => $prioridad,
+            ':categoria_id'    => $body['categoria_id']    ?? null,
+            ':titulo'          => $body['titulo'],
+            ':descripcion'     => $body['descripcion']     ?? null,
+            ':fecha_vencimiento'=> $body['fecha_vencimiento'] ?? null,
+            ':prioridad'       => $prioridad,
+            ':estado'          => $body['estado']          ?? 'pendiente',
         ]);
         response($stmt->fetch(), 201);
         break;
@@ -62,21 +64,23 @@ switch ($method) {
 
         $stmt = $db->prepare(
             "UPDATE tarea
-             SET titulo            = COALESCE(:titulo,                  titulo),
-                 descripcion       = COALESCE(:descripcion,             descripcion),
-                 fecha_vencimiento = COALESCE(:fecha_vencimiento::date, fecha_vencimiento),
-                 prioridad         = COALESCE(:prioridad,               prioridad),
-                 estado            = COALESCE(:estado,                  estado)
+             SET categoria_id     = COALESCE(:categoria_id,                 categoria_id),
+                 titulo           = COALESCE(:titulo,                       titulo),
+                 descripcion      = COALESCE(:descripcion,                  descripcion),
+                 fecha_vencimiento= COALESCE(:fecha_vencimiento::date,      fecha_vencimiento),
+                 prioridad        = COALESCE(:prioridad,                    prioridad),
+                 estado           = COALESCE(:estado,                       estado)
              WHERE id = :id
              RETURNING *"
         );
         $stmt->execute([
-            ':id'                => $id,
-            ':titulo'            => $body['titulo']            ?? null,
-            ':descripcion'       => $body['descripcion']       ?? null,
-            ':fecha_vencimiento' => $body['fecha_vencimiento'] ?? null,
-            ':prioridad'         => $body['prioridad']         ?? null,
-            ':estado'            => $estado,
+            ':id'               => $id,
+            ':categoria_id'     => $body['categoria_id']     ?? null,
+            ':titulo'           => $body['titulo']           ?? null,
+            ':descripcion'      => $body['descripcion']      ?? null,
+            ':fecha_vencimiento'=> $body['fecha_vencimiento']?? null,
+            ':prioridad'        => $body['prioridad']        ?? null,
+            ':estado'           => $estado,
         ]);
         $data = $stmt->fetch();
         $data ? response($data) : response(["error" => "Tarea no encontrada"], 404);
