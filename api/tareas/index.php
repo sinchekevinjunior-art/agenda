@@ -9,87 +9,79 @@ $id     = $_GET['id'] ?? null;
 
 switch ($method) {
 
-    // GET /api/tareas/            → todas las tareas
-    // GET /api/tareas/?id=1       → una tarea por ID
-    // GET /api/tareas/?completada=false → filtrar por estado
+    // GET /api/contactos/
+    // GET /api/contactos/?id=1
     case 'GET':
         if ($id) {
-            $stmt = $db->prepare("SELECT * FROM tarea WHERE id = :id");
+            $stmt = $db->prepare("SELECT * FROM contacto WHERE id = :id");
             $stmt->execute([':id' => $id]);
             $data = $stmt->fetch();
-            $data ? response($data) : response(["error" => "Tarea no encontrada"], 404);
-        } elseif (isset($_GET['completada'])) {
-            $val  = $_GET['completada'] === 'true' ? 'true' : 'false';
-            $stmt = $db->query("SELECT * FROM tarea WHERE completada = $val ORDER BY fecha_limite");
-            response($stmt->fetchAll());
+            $data ? response($data) : response(["error" => "Contacto no encontrado"], 404);
         } else {
-            $stmt = $db->query("SELECT * FROM tarea ORDER BY fecha_limite ASC");
+            $stmt = $db->query("SELECT * FROM contacto ORDER BY nombre ASC");
             response($stmt->fetchAll());
         }
         break;
 
-    // POST /api/tareas/
-    // Body: { "titulo":"Pagar luz", "fecha_limite":"2026-03-25", "prioridad":"alta" }
+    // POST /api/contactos/
+    // Body: { "nombre":"Ana", "apellido":"López", "telefono":"999", "email":"ana@mail.com", "notas":"..." }
     case 'POST':
         $body = getBody();
-        if (empty($body['titulo']))
-            response(["error" => "El titulo es obligatorio"], 400);
+        if (empty($body['nombre']))
+            response(["error" => "El nombre es obligatorio"], 400);
 
-        $prioridad = $body['prioridad'] ?? 'media';
-        if (!in_array($prioridad, ['baja', 'media', 'alta']))
-            response(["error" => "Prioridad invalida (baja, media, alta)"], 400);
-
+        // ✅ CORREGIDO: la BD tiene columna "apellido" y requiere usuario_id
+        // Usamos usuario_id=1 por defecto (usuario de ejemplo del script SQL)
         $stmt = $db->prepare(
-            "INSERT INTO tarea (titulo, fecha_limite, prioridad, completada)
-             VALUES (:titulo, :fecha_limite, :prioridad, false)
+            "INSERT INTO contacto (usuario_id, nombre, apellido, telefono, email, notas)
+             VALUES (1, :nombre, :apellido, :telefono, :email, :notas)
              RETURNING *"
         );
         $stmt->execute([
-            ':titulo'       => $body['titulo'],
-            ':fecha_limite' => $body['fecha_limite'] ?? null,
-            ':prioridad'    => $prioridad,
+            ':nombre'   => $body['nombre'],
+            ':apellido' => $body['apellido'] ?? null,
+            ':telefono' => $body['telefono'] ?? null,
+            ':email'    => $body['email']    ?? null,
+            ':notas'    => $body['notas']    ?? null,
         ]);
         response($stmt->fetch(), 201);
         break;
 
-    // PUT /api/tareas/?id=1
-    // Body: campos a actualizar (incluido completada: true/false)
+    // PUT /api/contactos/?id=1
     case 'PUT':
         if (!$id) response(["error" => "ID requerido"], 400);
         $body = getBody();
 
-        $completada = isset($body['completada'])
-            ? ($body['completada'] ? 'true' : 'false')
-            : null;
-
         $stmt = $db->prepare(
-            "UPDATE tarea
-             SET titulo       = COALESCE(:titulo,       titulo),
-                 fecha_limite = COALESCE(:fecha_limite::date, fecha_limite),
-                 prioridad    = COALESCE(:prioridad,    prioridad),
-                 completada   = COALESCE(:completada::boolean, completada)
+            "UPDATE contacto
+             SET nombre   = COALESCE(:nombre,   nombre),
+                 apellido = COALESCE(:apellido, apellido),
+                 telefono = COALESCE(:telefono, telefono),
+                 email    = COALESCE(:email,    email),
+                 notas    = COALESCE(:notas,    notas)
              WHERE id = :id
              RETURNING *"
         );
         $stmt->execute([
-            ':id'           => $id,
-            ':titulo'       => $body['titulo']       ?? null,
-            ':fecha_limite' => $body['fecha_limite'] ?? null,
-            ':prioridad'    => $body['prioridad']    ?? null,
-            ':completada'   => $completada,
+            ':id'       => $id,
+            ':nombre'   => $body['nombre']   ?? null,
+            ':apellido' => $body['apellido'] ?? null,
+            ':telefono' => $body['telefono'] ?? null,
+            ':email'    => $body['email']    ?? null,
+            ':notas'    => $body['notas']    ?? null,
         ]);
         $data = $stmt->fetch();
-        $data ? response($data) : response(["error" => "Tarea no encontrada"], 404);
+        $data ? response($data) : response(["error" => "Contacto no encontrado"], 404);
         break;
 
-    // DELETE /api/tareas/?id=1
+    // DELETE /api/contactos/?id=1
     case 'DELETE':
         if (!$id) response(["error" => "ID requerido"], 400);
-        $stmt = $db->prepare("DELETE FROM tarea WHERE id = :id RETURNING id");
+        $stmt = $db->prepare("DELETE FROM contacto WHERE id = :id RETURNING id");
         $stmt->execute([':id' => $id]);
         $stmt->fetch()
-            ? response(["mensaje" => "Tarea eliminada"])
-            : response(["error"   => "Tarea no encontrada"], 404);
+            ? response(["mensaje" => "Contacto eliminado"])
+            : response(["error"   => "Contacto no encontrado"], 404);
         break;
 
     default:
